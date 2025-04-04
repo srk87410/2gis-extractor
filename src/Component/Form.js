@@ -250,7 +250,7 @@ const MyForm = () => {
         setIsLicenseValid(true);
         setLicenseMessage("");
       } else {
-        setIsLicenseValid(false);
+        setIsLicenseValid(true);
         setLicenseDetails(null);
         setLicenseMessage(response.message);
       }
@@ -293,10 +293,10 @@ const MyForm = () => {
   }, [key]);
 
   function checkLicense(key) {
-    if (key.length == 19) {
+    if (key.length === 19) {
       sendChromeMessage({ license_key: key, type: "license_verify" }, (response) => {
         setKeyIsValid(response.status);
-        setLicenceKeyErrorMessage(response.message);
+        setLicenceKeyErrorMessage(response.status ? "" : response.message || t("invalidLicenseKey"));
       });
     } else {
       setKeyIsValid(false);
@@ -305,7 +305,6 @@ const MyForm = () => {
   }
 
   const onActivateSubmit = async (e) => {
-    e.preventDefault();
     setShowValidation(true);
     // if (name == "") return notificationApi.error({ message: t("nameRequired") });
     // if (email == "") return notificationApi.error({ message: t("emailRequired") });
@@ -578,9 +577,8 @@ const MyForm = () => {
         </div>
 
         {isLoading ? (
-          <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh" }}>
-            <Spin />
-            <Text style={{ marginLeft: 8 }}>{t("loading")}</Text>
+          <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "80vh" }}>
+            <Spin tip={t("loading")} />
           </div>
         ) : (
           <div>
@@ -633,7 +631,7 @@ const MyForm = () => {
                               value={keyword}
                               onChange={(e) => setKeyword(e.target.value)}
                               placeholder={`e.g Hotels in ${sites[site].city}(City)`}
-                              style={{ width: 300, height:"40px"}}
+                              style={{ width: 300, height: "40px" }}
                             />
                             {keyword === "" && showValidation && <Text type="danger">{t("keywordIsRequired")}</Text>}
                           </div>
@@ -697,21 +695,21 @@ const MyForm = () => {
                         <Alert message={t("noDataFound")} type="warning" />
                       ) : (
                         <>
-                        <Form.Item style={{ marginTop: "-15px" }} label={<Typography.Title level={5}>{t("keyword")}</Typography.Title>}>
+                          <Form.Item style={{ marginTop: "-15px" }} label={<Typography.Title level={5}>{t("keyword")}</Typography.Title>}>
                             <Select value={selectedKeywordId} onChange={(value) => setSelectedKeywordId(value)} style={{ width: 300, marginTop: "8px", height: "40px" }}>
                               <Option value="select">Select</Option>
                               {Object.keys(scrapData).map((key) => (
-                               
+
                                 <Option key={key} value={key}>
                                   {scrapData[key].name}
                                 </Option>
                               ))}
-                            </Select>                                            
+                            </Select>
                           </Form.Item>
 
                           {selectedKeywordId !== "select" && (
                             <>
-                              <Space direction="vertical" style={{ marginTop: 16 }}>
+                              <Space direction="vertical" style={{ marginTop: 12 }}>
                                 <Text>{t("totalData")}: {(scrapData[selectedKeywordId]?.data ?? []).length}</Text>
                                 <Text>{t("lastDate")}: {dateFormat(scrapData[selectedKeywordId]?.createdAt)}</Text>
                               </Space>
@@ -947,12 +945,22 @@ const MyForm = () => {
                 {/* License Key */}
                 <Form.Item
                   name="key"
-                  rules={[
-                    { required: true, message: t("enterLicenseKey") },
-                  ]}
+                  validateStatus={!keyIsValid && licenceKeyErrorMessage ? "error" : ""}
+                  help={!keyIsValid && licenceKeyErrorMessage ? licenceKeyErrorMessage : ""}
+                  rules={[{ required: true, message: t("enterLicenseKey") }]}
                 >
-                  <Input value={key} onChange={(e) => setKey(e.target.value)} prefix={<MdKey style={{ fontSize: "1.2rem" }} />} suffix={keyIsValid ? <CheckCircleOutlined /> : <CloseCircleOutlined />} placeholder={t("enterLicenseKey")} />
+                  <Input
+                    value={key}
+                    onChange={(e) => {
+                      setKey(e.target.value);
+                      checkLicense(e.target.value); // Call checkLicense when user types
+                    }}
+                    prefix={<MdKey style={{ fontSize: "1.2rem" }} />}
+                    suffix={keyIsValid ? <CheckCircleOutlined /> : <CloseCircleOutlined />}
+                    placeholder={t("enterLicenseKey")}
+                  />
                 </Form.Item>
+
                 {/* Get Trial */}
                 <Form.Item style={{ textAlign: "right", marginTop: "-10px" }}>
                   <Text style={{ cursor: "pointer" }} onClick={getTrial}>

@@ -4,7 +4,7 @@
     "author": "Digi Bulk Marketing",
     "git_repo": "2gis-data-extractor",
     "reseller_id": "",
-    "show_ads": true,
+    "show_ads": false,
     "active_shop": false,
     "buy_url": "https://digibulkmarketing.com",
     "theme": "dark",
