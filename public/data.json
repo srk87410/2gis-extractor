@@ -5,7 +5,7 @@
     "git_repo": "2gis-data-extractor",
     "reseller_id": "",
     "show_ads": true,
-    "active_shop": true,
+    "active_shop": false,
     "buy_url": "https://digibulkmarketing.com",
     "theme": "dark",
     "theme_setting": {

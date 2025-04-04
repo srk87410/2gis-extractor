@@ -1,3 +1,4 @@
+/* global chrome */
 import React, { useEffect, useState } from "react";
 import "./Form.css";
 import {
@@ -21,6 +22,7 @@ import {
   Grid,
   notification,
   Avatar,
+  Flex,
 } from "antd";
 import {
   PhoneOutlined,
@@ -41,6 +43,9 @@ import "react-phone-input-2/lib/style.css";
 import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css";
 import "swiper/css/autoplay";
+import { VscAccount } from "react-icons/vsc";
+import { IoLocationOutline, IoHomeOutline } from "react-icons/io5";
+import { MdKey } from "react-icons/md";
 import { Autoplay } from "swiper/modules";
 import countryList from "../countryList.json";
 import langList from "../lang.json";
@@ -61,8 +66,8 @@ const font = "'Poppins', sans-serif";
 
 const MyForm = () => {
   const { t, i18n } = useTranslation();
-
-  const [notificationApi, contextHolder] = notification.useNotification();
+  const [form] = Form.useForm();
+  const [api, contextHolder] = notification.useNotification();
   const [rData, setRData] = useState({});
   const sites = [
     {
@@ -133,7 +138,7 @@ const MyForm = () => {
 
   const sendChromeMessage = (data, callback) => {
     try {
-      chrome?.runtime.sendMessage(data, (response) => {
+      chrome.runtime.sendMessage(data, (response) => {
         callback(response);
       });
     } catch (e) {
@@ -194,7 +199,12 @@ const MyForm = () => {
         setSelectLang(data.lang ?? "en");
         i18next.changeLanguage(data.lang ?? "en");
       } else {
-        notificationApi.error({ message: t(response.message) });
+        api.error({
+          key: "error",
+          message: t(response.message),
+          duration: 2,
+          placement: "bottomLeft",
+        })
       }
     });
   };
@@ -215,10 +225,20 @@ const MyForm = () => {
   const renewLicenseKey = () => {
     sendChromeMessage({ key: licenseDetails.key, renew_key: renewKey, type: "renew" }, (response) => {
       if (response.status == true) {
-        notificationApi.success({ message: response.message });
+        api.success({
+          key: "success",
+          message: response.message,
+          duration: 2,
+          placement: "bottomLeft",
+        });
         setTimeout(() => renewCloseForm(), 500);
       } else {
-        notificationApi.error({ message: t(response.message) });
+        api.error({
+          key: "error",
+          message: t(response.message),
+          duration: 2,
+          placement: "bottomLeft",
+        })
       }
     });
   };
@@ -287,24 +307,34 @@ const MyForm = () => {
   const onActivateSubmit = async (e) => {
     e.preventDefault();
     setShowValidation(true);
-    if (name == "") return notificationApi.error({ message: t("nameRequired") });
-    if (email == "") return notificationApi.error({ message: t("emailRequired") });
-    if (!isEmailIsValid(email)) return notificationApi.error({ message: t("emailInvalid") });
-    if (phone == "") return notificationApi.error({ message: t("phoneInvalid") });
-    if (city == "") return notificationApi.error({ message: t("cityRequired") });
-    if (country == "") return notificationApi.error({ message: t("countryRequired") });
-    if (key == "") return notificationApi.error({ message: t("licenseKeyRequired") });
-    if (!keyIsValid) return notificationApi.error({ message: t("licenseKeyInvalid") });
+    // if (name == "") return notificationApi.error({ message: t("nameRequired") });
+    // if (email == "") return notificationApi.error({ message: t("emailRequired") });
+    // if (!isEmailIsValid(email)) return notificationApi.error({ message: t("emailInvalid") });
+    // if (phone == "") return notificationApi.error({ message: t("phoneInvalid") });
+    // if (city == "") return notificationApi.error({ message: t("cityRequired") });
+    // if (country == "") return notificationApi.error({ message: t("countryRequired") });
+    // if (key == "") return api.error({ message: t("licenseKeyRequired") });
+    // if (!keyIsValid) return api.error({ message: t("licenseKeyInvalid") });
 
     const msg = { name, email, phone: `+${phone}`, city, country, key };
     sendChromeMessage({ data: msg, type: "license_active" }, (response) => {
       if (response.status == true) {
         setIsLicenseValid(true);
         getLicenseDetails();
-        notificationApi.success({ message: t(response.message) });
+        api.success({
+          key: "success",
+          message: response.message,
+          duration: 2,
+          placement: "bottomLeft",
+        });
       } else {
         setIsLicenseValid(false);
-        notificationApi.error({ message: t(response.message) });
+        api.error({
+          key: "error",
+          message: t(response.message),
+          duration: 2,
+          placement: "bottomLeft",
+        })
       }
     });
   };
@@ -315,10 +345,22 @@ const MyForm = () => {
     let data = { exportForm: dataFormate, removeDuplicate, delay, extractCol, lang: selectLang };
     sendChromeMessage({ setting: data, type: "save_setting" }, (response) => {
       if (response.status) {
-        notificationApi.success({ message: t("settingSave") });
+        // notificationApi.success({ message: t("settingSave") });
+        api.success({
+          key: "success",
+          message: response.message,
+          duration: 2,
+          placement: "bottomLeft",
+        });
         i18next.changeLanguage(selectLang);
       } else {
-        notificationApi.error({ message: t("settingSaveFailed") });
+        // notificationApi.error({ message: t("settingSaveFailed") });
+        api.error({
+          key: "error",
+          message: t("settingSaveFailed"),
+          duration: 2,
+          placement: "bottomLeft",
+        })
       }
     });
   };
@@ -326,20 +368,50 @@ const MyForm = () => {
   const onScrape = (e) => {
     e.preventDefault();
     setShowValidation(true);
-    if (keyword == "") return notificationApi.error({ message: t("keywordRequired") });
+    if (keyword == "") return
+    // notificationApi.error({ message: t("keywordRequired") });
+    api.error({
+      key: "error",
+      message: t("keywordRequired"),
+      duration: 2,
+      placement: "bottomLeft",
+    })
     sendChromeMessage({ keyword, site: sites[site], type: "scrap" }, (response) => {
-      if (response.status == true) notificationApi.success({ message: t(response.message) });
-      else notificationApi.error({ message: t(response.message) });
+      if (response.status == true)
+        api.success({
+          key: "success",
+          message: response.message,
+          duration: 2,
+          placement: "bottomLeft",
+        });
+      else
+        // notificationApi.error({ message: t(response.message) });
+        api.error({
+          key: "error",
+          message: t(response.message),
+          duration: 2,
+          placement: "bottomLeft",
+        })
     });
   };
 
   const onDownloadScrapData = () => {
     sendChromeMessage({ type: "download", keyword: selectedKeywordId }, (response) => {
       if (response.status == true) {
-        notificationApi.success({ message: t(response.message) });
+        api.success({
+          key: "success",
+          message: response.message,
+          duration: 2,
+          placement: "bottomLeft",
+        });
         setSelectedKeywordId("select");
       } else {
-        notificationApi.error({ message: t(response.message) });
+        api.error({
+          key: "error",
+          message: t(response.message),
+          duration: 2,
+          placement: "bottomLeft",
+        })
       }
     });
   };
@@ -347,11 +419,21 @@ const MyForm = () => {
   const onDeleteScrapData = () => {
     sendChromeMessage({ type: "delete_scrap", keyword: selectedKeywordId }, (response) => {
       if (response.status == true) {
-        notificationApi.success({ message: t(response.message) });
+        api.success({
+          key: "success",
+          message: response.message,
+          duration: 2,
+          placement: "bottomLeft",
+        });
         setSelectedKeywordId("select");
         getScrapeData();
       } else {
-        notificationApi.error({ message: t(response.message) });
+        api.error({
+          key: "error",
+          message: t(response.message),
+          duration: 2,
+          placement: "bottomLeft",
+        })
       }
     });
   };
@@ -359,10 +441,20 @@ const MyForm = () => {
   const onClearScrapData = () => {
     sendChromeMessage({ type: "clear_scrap", keyword: selectedKeywordId }, (response) => {
       if (response.status == true) {
-        notificationApi.success({ message: t(response.message) });
+        api.success({
+          key: "success",
+          message: response.message,
+          duration: 2,
+          placement: "bottomLeft",
+        });
         setScrapData({});
       } else {
-        notificationApi.error({ message: t(response.message) });
+        api.error({
+          key: "error",
+          message: t(response.message),
+          duration: 2,
+          placement: "bottomLeft",
+        })
       }
     });
   };
@@ -389,10 +481,20 @@ const MyForm = () => {
       console.log("get one day trial demo", response);
       if (response.status) {
         setKey(response.key);
-        notificationApi.success({ message: response.message });
+        api.success({
+          key: "success",
+          message: response.message,
+          duration: 2,
+          placement: "bottomLeft",
+        });
       } else {
         setKey(response.key);
-        notificationApi.error({ message: response.message });
+        api.error({
+          key: "error",
+          message: t(response.message),
+          duration: 2,
+          placement: "bottomLeft",
+        })
       }
     });
   };
@@ -485,12 +587,18 @@ const MyForm = () => {
             {isLicenseValid ? (
               <>
                 <div style={{ backgroundColor: theme.token.colorPrimary }}>
-                  <Row justify="center" gutter={[16, 16]} style={{ padding: "8px 16px" }}>
+                  <Row justify="center" align="middle" style={{ padding: "8px 10px" }}>
                     {TAB_ITEMS.map((x, i) => (
-                      <Col span={6} key={"tab-" + i}>
+                      <Col span={6} key={"tab-" + i} style={{ display: "flex", justifyContent: "center" }}>
                         <Button
-                          type={selectedTabId === i ? "primary" : "text"}
-                          style={{ color: selectedTabId === i ? "white" : "inherit" }}
+                          type={selectedTabId === i ? "default" : "text"}
+                          style={{
+                            color: selectedTabId === i ? theme.token.colorText : "white",
+                            minWidth: "100px",
+                            whiteSpace: "nowrap",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                          }}
                           onClick={() => setSelectedTabId(i)}
                         >
                           {t(x)}
@@ -504,14 +612,14 @@ const MyForm = () => {
                   {selectedTabId === 0 && (
                     <Row justify="center">
                       <Col>
-                        <form onSubmit={onScrape}>
-                          <Text>{t("welcome")} {licenseDetails?.name ?? ""}</Text>
+                        <form onSubmit={onScrape} style={{ padding: "8px", marginTop: "-31px" }}>
+                          <Title level={5}>{t("welcome")} {licenseDetails?.name ?? ""}</Title>
                           <div style={{ marginTop: 16 }}>
                             <Select
                               value={site}
                               onChange={(value) => setSite(value)}
                               placeholder={t("website")}
-                              style={{ width: 300 }}
+                              style={{ width: 300, height: "40px" }}
                             >
                               {sites.map((site, i) => (
                                 <Option key={"site-" + i} value={i}>
@@ -525,11 +633,11 @@ const MyForm = () => {
                               value={keyword}
                               onChange={(e) => setKeyword(e.target.value)}
                               placeholder={`e.g Hotels in ${sites[site].city}(City)`}
-                              style={{ width: 300 }}
+                              style={{ width: 300, height:"40px"}}
                             />
                             {keyword === "" && showValidation && <Text type="danger">{t("keywordIsRequired")}</Text>}
                           </div>
-                          <Space style={{ marginTop: 16 }}>
+                          <Space style={{ marginTop: 16, display: "flex", justifyContent: "center" }}>
                             <Button type="primary" htmlType="submit">
                               {t("start")}
                             </Button>
@@ -560,14 +668,23 @@ const MyForm = () => {
                                 </SwiperSlide>
                               )}
                             </Swiper>
-                            <Space style={{ justifyContent: "space-between", width: "100%", marginTop: 8 }}>
-                              <Button disabled={activeStep === 0} onClick={() => setActiveStep(activeStep - 1)}>
+                            <Space style={{ width: "91%", justifyContent: "space-between", marginTop: "1" }}>
+                              <Button
+                                style={{ width: 100 }}
+                                disabled={activeStep === 0}
+                                onClick={() => setActiveStep(activeStep - 1)}
+                              >
                                 <LeftOutlined /> {t("back")}
                               </Button>
-                              <Button disabled={activeStep === totalSlider() - 1} onClick={() => setActiveStep(activeStep + 1)}>
+                              <Button
+                                style={{ width: 100 }}
+                                disabled={activeStep === totalSlider() - 1}
+                                onClick={() => setActiveStep(activeStep + 1)}
+                              >
                                 {t("next")} <RightOutlined />
                               </Button>
                             </Space>
+
                           </div>
                         )}
                       </Col>
@@ -580,83 +697,105 @@ const MyForm = () => {
                         <Alert message={t("noDataFound")} type="warning" />
                       ) : (
                         <>
-                          <Select
-                            value={selectedKeywordId}
-                            onChange={(value) => setSelectedKeywordId(value)}
-                            placeholder={t("selectKeyword")}
-                            style={{ width: "100%" }}
-                          >
-                            <Option value="select">Select</Option>
-                            {Object.keys(scrapData).map((key) => (
-                              <Option key={key} value={key}>
-                                {scrapData[key].name}
-                              </Option>
-                            ))}
-                          </Select>
+                        <Form.Item style={{ marginTop: "-15px" }} label={<Typography.Title level={5}>{t("keyword")}</Typography.Title>}>
+                            <Select value={selectedKeywordId} onChange={(value) => setSelectedKeywordId(value)} style={{ width: 300, marginTop: "8px", height: "40px" }}>
+                              <Option value="select">Select</Option>
+                              {Object.keys(scrapData).map((key) => (
+                               
+                                <Option key={key} value={key}>
+                                  {scrapData[key].name}
+                                </Option>
+                              ))}
+                            </Select>                                            
+                          </Form.Item>
+
                           {selectedKeywordId !== "select" && (
                             <>
                               <Space direction="vertical" style={{ marginTop: 16 }}>
                                 <Text>{t("totalData")}: {(scrapData[selectedKeywordId]?.data ?? []).length}</Text>
                                 <Text>{t("lastDate")}: {dateFormat(scrapData[selectedKeywordId]?.createdAt)}</Text>
                               </Space>
-                              <Space style={{ marginTop: 16 }}>
-                                <Button type="primary" onClick={onDownloadScrapData}>
-                                  {t("download")}
-                                </Button>
-                                <Button danger onClick={onDeleteScrapData}>
-                                  {t("delete")}
-                                </Button>
-                              </Space>
+                              <Row justify="center" style={{ marginTop: 16 }}>
+                                <Space>
+                                  <Button type="primary" onClick={onDownloadScrapData}>
+                                    {t("download")}
+                                  </Button>
+                                  <Button danger onClick={onDeleteScrapData}>
+                                    {t("delete")}
+                                  </Button>
+                                </Space>
+                              </Row>
                             </>
                           )}
-                          <Space style={{ marginTop: 16 }}>
-                            <Button danger type="dashed" onClick={onClearScrapData}>
-                              {t("clearAll")}
-                            </Button>
-                          </Space>
+                          <Button
+                            danger
+                            type="dashed"
+                            onClick={onClearScrapData}
+                            style={{ marginTop: 16, display: "block", marginLeft: "auto", marginRight: "auto" }}
+                          >
+                            {t("clearAll")}
+                          </Button>
                         </>
                       )}
                     </div>
                   )}
 
                   {selectedTabId === 2 && (
-                    <div>
+                    <div style={{ padding: "5px" }}>
                       <form onSubmit={onSaveSetting}>
-                        <Space direction="vertical" style={{ width: "100%" }}>
-                          <Select
-                            value={removeDuplicate}
-                            onChange={(value) => setRemoveDuplicate(value)}
-                            placeholder={t("removeDuplicate")}
-                            style={{ width: "100%" }}
+                        <Form layout="vertical">
+                          <Form.Item
+                            label={t("removeDuplicate")}
+                            labelCol={{ style: { fontWeight: "bold" } }}
                           >
-                            <Option value="only_phone">{t("onlyPhone")}</Option>
-                            <Option value="only_address">{t("onlyAddress")}</Option>
-                            <Option value="phone_and_address">{t("phoneAndaddress")}</Option>
-                          </Select>
-                          <Space>
-                            <Input
-                              type="number"
-                              value={delay}
-                              onChange={(e) => setDelay(e.target.value)}
-                              placeholder={t("enterDelay")}
-                              min={1}
-                              style={{ width: 150 }}
-                            />
-                            <Select
-                              value={selectLang}
-                              onChange={(value) => setSelectLang(value)}
-                              placeholder={t("language")}
-                              style={{ width: 150 }}
-                            >
-                              {langList.map((x) => (
-                                <Option key={x.key} value={x.key}>
-                                  {x.name}
-                                </Option>
-                              ))}
+                            <Select value={removeDuplicate} onChange={(value) => setRemoveDuplicate(value)}>
+                              <Select.Option value="only_phone">{t("onlyPhone")}</Select.Option>
+                              <Select.Option value="only_address">{t("onlyAddress")}</Select.Option>
+                              <Select.Option value="phone_and_address">{t("phoneAndaddress")}</Select.Option>
                             </Select>
-                          </Space>
+                          </Form.Item>
+
+                          <Row gutter={16}>
+                            <Col span={12}>
+                              <Form.Item
+                                label={t("delay")}
+                                labelCol={{ style: { fontWeight: "bold" } }}
+                              >
+                                <Input
+                                  type="number"
+                                  value={delay}
+                                  onChange={(e) => setDelay(e.target.value)}
+                                  min={1}
+                                />
+                              </Form.Item>
+                            </Col>
+                            <Col span={12}>
+                              <Form.Item
+                                label={t("language")}
+                                labelCol={{ style: { fontWeight: "bold" } }}
+                              >
+                                <Select
+                                  value={selectLang}
+                                  onChange={setSelectLang}
+                                  showSearch
+                                  filterOption={(input, option) =>
+                                    option.children.toLowerCase().includes(input.toLowerCase())
+                                  }
+                                  style={{ width: "100%" }}
+                                  placeholder={t("selectLanguage")}
+                                >
+                                  {langList.map((x) => (
+                                    <Select.Option key={x.key} value={x.key}>
+                                      {x.name}
+                                    </Select.Option>
+                                  ))}
+                                </Select>
+                              </Form.Item>
+                            </Col>
+                          </Row>
+
                           <Text strong>{t("extractingCol")}</Text>
-                          <Row gutter={[16, 16]}>
+                          <Row>
                             {columns.map((col) => (
                               <Col span={12} key={col.value}>
                                 <Checkbox
@@ -668,17 +807,21 @@ const MyForm = () => {
                               </Col>
                             ))}
                           </Row>
-                          <Button type="primary" htmlType="submit">
-                            {t("save")}
-                          </Button>
-                        </Space>
+
+                          <Form.Item style={{ display: "flex", justifyContent: "center", marginTop: "15px" }}>
+                            <Button onClick={onSaveSetting} type="primary" htmlType="submit">
+                              {t("save")}
+                            </Button>
+                          </Form.Item>
+                        </Form>
                       </form>
                     </div>
                   )}
 
+
                   {selectedTabId === 3 && (
-                    <div>
-                      <Title level={4}>{t("helpMsg")}</Title>
+                    <div style={{ padding: "7px", marginTop: "-32px" }}>
+                      <Title level={5}>{t("helpMsg")}</Title>
                       <Text>{t("contactWithEmail")}</Text>
                       <List>
                         {rData?.active_shop == true ? (
@@ -745,106 +888,93 @@ const MyForm = () => {
                           )
                         )}
                       </List>
-                      <Title level={4}>{t("disclaimer")}:</Title>
+                      <Title level={5} style={{ marginTop: "-10px" }}>{t("disclaimer")}:</Title>
                       <Text>{t("certified2gis")}</Text>
                     </div>
                   )}
                 </div>
 
-                <Space style={{ justifyContent: "center", width: "100%", marginTop: 16 }}>
-                  <Text>{`V ${localmanifestVersion?.localVersion ?? ""}`}</Text>
-                </Space>
+                <div style={{ position: "absolute", bottom: 0, width: "100%", textAlign: "center" }}>
+                  <Row justify="center" align="middle">
+                    <Typography.Text type="secondary">
+                      {`V ${localmanifestVersion?.localVersion ?? ""}`}
+                    </Typography.Text>
+                  </Row>
+                </div>
               </>
             ) : (
-              <Row justify="center" className="mainBox">
-                <Col>
-                  <form onSubmit={onActivateSubmit}>
-                    <Space direction="vertical" style={{ width: 300 }}>
-                      {licenseMessage !== "" && <Alert message={t(licenseMessage)} type="warning" />}
-                      <Input
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        placeholder={t("enterName")}
-                        prefix={<UserOutlined />}
-                        status={name === "" && showValidation ? "error" : ""}
-                        suffix={name === "" && showValidation ? <Text type="danger">{t("nameRequired")}</Text> : null}
-                      />
-                      <Input
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        placeholder={t("enterEmail")}
-                        prefix={<MailOutlined />}
-                        status={(email === "" || !isEmailIsValid(email)) && showValidation ? "error" : ""}
-                        suffix={
-                          showValidation ? (
-                            email === "" ? (
-                              <Text type="danger">{t("emailRequired")}</Text>
-                            ) : !isEmailIsValid(email) ? (
-                              <Text type="danger">{t("emailInvalid")}</Text>
-                            ) : null
-                          ) : null
-                        }
-                      />
-                      <PhoneInput
-                        country={"in"}
-                        value={phone}
-                        onChange={(phone) => setPhone(phone)}
-                        inputStyle={{ width: "100%" }}
-                        placeholder={t("enterPhone")}
-                      />
-                      {phone === "" && showValidation && <Text type="danger">{t("phoneRequired")}</Text>}
-                      <Input
-                        value={city}
-                        onChange={(e) => setCity(e.target.value)}
-                        placeholder={t("enterCity")}
-                        prefix={<HomeOutlined />}
-                        status={city === "" && showValidation ? "error" : ""}
-                        suffix={city === "" && showValidation ? <Text type="danger">{t("cityRequired")}</Text> : null}
-                      />
-                      <Select
-                        value={country}
-                        onChange={(value) => setCountry(value)}
-                        placeholder={t("selectCountry")}
-                        showSearch
-                        style={{ width: "100%" }}
-                        suffixIcon={<EnvironmentOutlined />}
-                      >
-                        {countryList.map((x) => (
-                          <Option key={x.countryCode} value={x.countryNameEn}>
-                            {x.countryNameEn}
-                          </Option>
-                        ))}
-                      </Select>
-                      <Input
-                        value={key}
-                        onChange={(e) => setKey(e.target.value)}
-                        placeholder={t("enterLicenseKey")}
-                        prefix={<KeyOutlined />}
-                        suffix={keyIsValid ? <CheckCircleOutlined style={{ color: "#52c41a" }} /> : <CloseCircleOutlined />}
-                        status={key !== "" && !keyIsValid ? "error" : ""}
-                      />
-                      {key !== "" && !keyIsValid && <Text type="danger">{licenceKeyErrorMessage}</Text>}
-                      <div style={{ textAlign: "right" }}>
-                        <Text style={{ cursor: "pointer" }} onClick={getTrial}>
-                          {t("getTrial")}
-                        </Text>
-                      </div>
-                      <Space>
-                        <Button type="primary" htmlType="submit">
-                          {t("activate")}
-                        </Button>
-                        {product && rData?.active_shop == true && (
-                          <Button>
-                            <a href={product?.siteUrl ? product.siteUrl : rData?.buy_url} target="_blank" rel="noopener noreferrer">
-                              {t("buyNow")}
-                            </a>
-                          </Button>
-                        )}
-                      </Space>
-                    </Space>
-                  </form>
-                </Col>
-              </Row>
+              <Form
+                form={form}
+                style={{ padding: 12, maxWidth: 400, margin: "0 auto" }}
+                layout="vertical"
+                onFinish={onActivateSubmit} // Handles form submission
+              >
+                {/* Name */}
+                <Form.Item name="name" rules={[{ required: true, message: t("nameRequired") }]}>
+                  <Input value={name} onChange={(e) => setName(e.target.value)} prefix={<VscAccount style={{ fontSize: "1.2rem" }} />} placeholder={t("enterName")} />
+                </Form.Item>
+                {/* Email */}
+                <Form.Item
+                  name="email"
+                  rules={[
+                    { required: true, message: t("emailRequired") },
+                    { type: "email", message: t("emailInvalid") }
+                  ]}
+                >
+                  <Input value={email} onChange={(e) => setEmail(e.target.value)} prefix={<MailOutlined />} placeholder={t("enterEmail")} />
+                </Form.Item>
+                {/* Phone */}
+                <Form.Item name="phone" rules={[{ required: true, message: t("phoneRequired") }]}>
+                  <PhoneInput value={phone} onChange={(phone) => setPhone(phone)} country={"in"} inputStyle={{ width: "100%" }} />
+                </Form.Item>
+                {/* City */}
+                <Form.Item name="city" rules={[{ required: true, message: t("cityRequired") }]}>
+                  <Input value={city} onChange={(e) => setCity(e.target.value)} prefix={<IoHomeOutline style={{ fontSize: "1.2rem" }} />} placeholder={t("enterCity")} />
+                </Form.Item>
+                {/* Country */}
+                <Form.Item name="country" rules={[{ required: true, message: t("selectCountry") }]}>
+                  {/* <IoLocationOutline style={{ fontSize: "1.2rem" }} /> */}
+                  <Select value={country} onChange={(value) => setCountry(value)} prefix={<IoLocationOutline style={{ fontSize: "1.2rem" }} />} placeholder={t("selectCountry")} showSearch>
+                    {countryList.map((x) => (
+                      <Option key={x.countryCode}
+                        value={x.countryNameEn}
+                        label={x.countryNameEn}>
+                        {x.countryNameEn}
+                      </Option>
+                    ))}
+                  </Select>
+                </Form.Item>
+                {/* License Key */}
+                <Form.Item
+                  name="key"
+                  rules={[
+                    { required: true, message: t("enterLicenseKey") },
+                  ]}
+                >
+                  <Input value={key} onChange={(e) => setKey(e.target.value)} prefix={<MdKey style={{ fontSize: "1.2rem" }} />} suffix={keyIsValid ? <CheckCircleOutlined /> : <CloseCircleOutlined />} placeholder={t("enterLicenseKey")} />
+                </Form.Item>
+                {/* Get Trial */}
+                <Form.Item style={{ textAlign: "right", marginTop: "-10px" }}>
+                  <Text style={{ cursor: "pointer" }} onClick={getTrial}>
+                    {t("getTrial")}
+                  </Text>
+                </Form.Item>
+                {/* Buttons */}
+                <Flex justify="center">
+                  <Space>
+                    <Button type="primary" htmlType="submit">
+                      {t("activate")}
+                    </Button>
+                    {(product?.siteUrl || rData?.buy_url) && (
+                      <Button>
+                        <a href={product?.siteUrl || rData?.buy_url} target="_blank" rel="noopener noreferrer">
+                          {t("buyNow")}
+                        </a>
+                      </Button>
+                    )}
+                  </Space>
+                </Flex>
+              </Form>
             )}
           </div>
         )}

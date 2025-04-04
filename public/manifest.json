@@ -7,8 +7,8 @@
     "default_popup": "index.html"
   },
   "host_permissions": [
-    "https://2gis.az",
-    "https://2gis.ae",
+    "https://*.2gis.az/*",
+    "https://*.2gis.ae/*",
     "*://digibulkmarketing.com/*",
     "*://api.digibulkmarketing.com/*"
   ],
